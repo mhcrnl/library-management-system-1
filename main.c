@@ -23,6 +23,7 @@ typedef struct user{
   char sex[10];
   int id;
   int age;
+  int usertype;
 }User;
 typedef struct usernode{
   User user;
@@ -70,11 +71,12 @@ void init_userlist(void);
 
 static ulink adminlist;
 static ulink normallist;
+static int user_id;
 
 int main()
-{
+{ int c;
   loginlink llink=NULL;
-  while(1){
+  while(true){
   free(llink);
   llink=login();
   if(llink->usertype==ADMIN)
@@ -83,6 +85,10 @@ int main()
     normaluser_UI(llink->username);
  else
     printf("Login Fail , Can't find a match in user DB\n");
+  printf("Wanna Exit?[E|e], otherwise retry\n");
+  c = getchar();
+  if(c=='E'||c=='e')
+    break;
 }
 return 0;
 }
@@ -101,11 +107,12 @@ void init_userlist()
 void admin_UI(char username[])
 {
   int c,flag=1;
+
+  while(flag){
   printf("############# Menu for user '%s' #############\n",username);
-  printf("1. User Management\n2. Book Management\n3. Borrow Management\n");
+  printf("1. User Management\n2. Book Management\n3. Borrow Management\n4. Exit\n");
   printf("Which service do you like?[ 1 ]\n");
   c=getchar();
-  while(flag--){
   switch(c){
     case '\n':
     case '1':
@@ -117,29 +124,104 @@ void admin_UI(char username[])
     case '3':
       borrow_manageUI();
       break;
+    case '4':
+      flag=0;
+      break;
     default:
       printf("Please input an valid option\n");
-      flag=1;
       break;
   }
   }
  }
 
 void user_management(char username[])
-{ int choice;
-  printf("############# User Management Menu for user '%s' #############\n");
-  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n");
+{
+  int choice,flag=1;
+  while(flag){
+  printf("############# User Management Menu for user '%s' #############\n",username);
+  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n5. Exit\n");
   choice=getchar();
   switch(choice)
   {
     case '1':
-    case 'a':
     case 'A':
-         adduser();
+    case 'a':
+      add_user();
+      break;
+    case '2':
+    case 'D':
+    case 'd':
+      delete_user();
+      break;
+    case '3':
+    case 'S':
+    case 's':
+      search_user();
+      break;
+    case '4':
+    case 'M':
+    case 'm':
+      modify_user();
+      break;
+    case '5':
+    case 'E':
+    case 'e':
+      flag=1;
+      break;
+    default:
+      printf("Please input a valid option\n");
+      break;
   }
 
 }
+}
 
+void add_user()
+{
+  char username[MAXUSERNAME];
+  char password[MAXPASSWD];
+  char phonenum[MAXPHONENUM];
+  char sex[10];
+  int usernamelen,passwordlen,usertype,age;
+  ulink userlink=NULL;
+  usertype=FORBIDDEN;
+
+  while(true)
+  {
+    printf("Please input user info that you want to add:\n");
+    usernamelen=getusername(username,MAXUSERNAME);
+    passwordlen=getpassword(password,MAXPASSWD);
+    printf("USERTYPE:\n");
+    scanf("%d",&usertype);
+    printf("AGE:\n");
+    scanf("%d",&age);
+    printf("PHONENUMBER:\n");
+    scanf("%s",phonenum);
+    printf("SEX:\n");
+    scanf("%s",sex);
+
+    if(username<6||passwordlen<6)
+      printf("username and password should not be less than 6\n");
+    else if(usertype!=ADMIN&&usertype!=NORMAL_USER)
+      printf("usertype %d is not correct",usertype);
+    else
+    {
+      userlink=(ulink)malloc(sizeof(Usernode));
+      strcpy(userlink->user.username,username);
+      strcpy(userlink->user.password,password);
+      userlink->user.usertype=usertype;
+      userlink->next=NULL;
+      if(usertype==ADMIN)
+        user_insert(adminlist,userlink);
+      else(usertype==NORMAL_USER)
+        user_insert(normallist,userlink);
+
+    }
+  }
+
+
+
+}
 
 void normaluser_UI(char username[])
 {
