@@ -224,6 +224,9 @@ void add_user()
 
 }
 
+ulink user_insert(ulink adminlist,ulink userlink)
+{}
+
 void normaluser_UI(char username[])
 {
   printf("############# Menu for user '%s' #############\n",username);
