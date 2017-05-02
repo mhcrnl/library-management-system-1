@@ -68,6 +68,7 @@ void normaluser_UI(char []);
 ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
 void init_userlist(void);
+ulink user_insert(ulink,ulink);
 
 static ulink adminlist;
 static ulink normallist;
