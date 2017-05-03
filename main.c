@@ -69,6 +69,10 @@ ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
 void init_userlist(void);
 ulink user_insert(ulink,ulink);
+void delete_user(void);
+void add_user(void);
+void user_delete_by_name(char []);
+void user_delete_by_id(int);
 
 static ulink adminlist;
 static ulink normallist;
@@ -101,6 +105,7 @@ void init_userlist()
   adminlist=(ulink)malloc(sizeof(Usernode));
   strcpy(adminlist->user.username,"admin");
   strcpy(adminlist->user.password,"czj050507");
+  adminlist->user.id=1;
   adminlist->next=NULL;
 
 }
@@ -216,16 +221,68 @@ void add_user()
         user_insert(adminlist,userlink);
       else(usertype==NORMAL_USER)
         user_insert(normallist,userlink);
-
+      break;
     }
   }
 
+}
+
+void delete_user()
+{
+  char username[MAXUSERNAME];
+  int usernamelen,option,id;
+  ulink userlink=NULL;
+
+  while(true)
+  {
+    printf("Select user by ID[I] or by username[U]?\n");
+    option=getchar();
+    if(option=='U' || option=='u')
+    {  printf("Please input username that you want to delete:\n");
+       usernamelen=getusername(username,MAXUSERNAME);
+    if(usernamelen<6)
+      printf("usernamelen should not be less than 6\n");
+    else
+    {
+        user_delete_by_name(username);
+    }
+  }
+  else if(option=='I'||option=='i')
+  {
+    printf("Please input user ID that you want to delete:\n");
+    scanf("%d",&id);
+    {
+        user_delete_by_id(id);
+    }
+  }
+  else
+    printf("Unknown option\n");
+
+}
+
+}
+
+void user_delete_by_name(char username[])
+{
 
 
 }
 
-ulink user_insert(ulink adminlist,ulink userlink)
-{}
+void user_delete_by_id(int id)
+{
+
+}
+
+
+void user_insert(ulink userlist,ulink userlink)
+{
+   ulink temp;
+   for(temp=userlist;temp->next!=NULL;temp=temp->next)
+      ;
+   temp->next=userlink;
+   userlink->user.id=temp->user.id+1;
+
+}
 
 void normaluser_UI(char username[])
 {
