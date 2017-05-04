@@ -73,6 +73,17 @@ void delete_user(void);
 void add_user(void);
 void user_delete_by_name(char []);
 void user_delete_by_id(int);
+void modify_user(void);
+int search_user(void);
+void user_display(ulink);
+ulink search_user_by_name(char []);
+ulink search_user_by_id(int);
+int user_delete_by_name(char []);
+int user_delete_by_id(int);
+
+
+
+
 
 static ulink adminlist;
 static ulink normallist;
@@ -227,6 +238,7 @@ void add_user()
 
 }
 
+
 void delete_user()
 {
   char username[MAXUSERNAME];
@@ -262,15 +274,229 @@ void delete_user()
 
 }
 
-void user_delete_by_name(char username[])
+int search_user()
 {
+   char username[MAXUSERNAME];
+   int id,option,flag;
+   flag=1;
+   while(flag--){
+   printf("Search user by name[N] or id[I]:");
+   option=getchar();
+   switch(option)
+   {
+      case 'N':
+      case 'n':
+          getusername(username,MAXUSERNAME);
+          search_user_by_name(username);
+          break;
+      case 'I':
+      case 'i':
+          printf("Please input user ID:\n");
+          scanf("%d",&id);
+          search_user_by_id(id);
+          break;
+      default:
+         printf("Unknown option\n");
+         flag=1;
+         break;
+   }
+}
+}
 
+void modify_user()
+{
+  char username[MAXUSERNAME];
+  char password[MAXPASSWD];
+  char phonenum[MAXPHONENUM];
+  char sex[10];
+  int id,option,flag,choice,usertype,age;
+  ulink user=NULL;
+  flag=1;
+  while(flag--){
+  printf("Locate user by name[N] or id[I]:");
+  option=getchar();
+  switch(option)
+  {
+     case 'N':
+     case 'n':
+         getusername(username,MAXUSERNAME);
+         user=search_user_by_name(username);
+         break;
+     case 'I':
+     case 'i':
+         printf("Please input user ID:\n");
+         scanf("%d",&id);
+         user=search_user_by_id(id);
+         break;
+    case 'q':
+    case 'Q':
+         break;
+     default:
+        printf("Unknown option\n");
+        flag=1;
+        break;
+  }
+
+}
+if(user==NULL)
+  printf("User not found\n");
+else
+{
+  printf("Change info for user %s",user->user.username);
+  printf("Usertype: %d ,[m/M] to modify ,other to skip\n",user->user.usertype);
+  choice=getchar();
+  if(choice==m||choice==M)
+  {
+    scanf("%d",&usertype);
+    user->user.usertype=usertype;
+  }
+
+  printf("Password: %s ,[m/M] to modify ,other to skip\n",user->user.password);
+  choice=getchar();
+  if(choice==m||choice==M)
+  {
+    scanf("%s",password);
+    strcpy(user->user.password,password);
+  }
+  printf("Phonenum: %s ,[m/M] to modify ,other to skip\n",user->user.phonenum);
+  choice=getchar();
+  if(choice==m||choice==M)
+  {
+    scanf("%s",phonenum);
+    strcpy(user->user.phonenum,phonenum);
+  }
+  printf("Sex: %s ,[m/M] to modify ,other to skip\n",user->user.sex);
+  choice=getchar();
+  if(choice==m||choice==M)
+  {
+    scanf("%s",sex);
+    strcpy(user->user.sex,sex);
+  }
+  printf("Age: %d ,[m/M] to modify ,other to skip\n",user->user.age);
+  choice=getchar();
+  if(choice==m||choice==M)
+  {
+    scanf("%d",&age);
+    user->user.age=age;
+  }
+  printf("User info modification done\nnew user info is:\n");
+  user_display(user);
+}
+}
+
+void user_display(ulink user)
+{
+  if(user==NULL)
+   printf("user not exist\n");
+  else
+  {
+      printf("User ID: %d\n",user->user.id);
+      printf("Usertype: %d\n",user->user.usertype);
+      printf("Username: %s\n",user->user.username);
+      printf("Password: %s\n",user->user.password);
+      printf("phonenum: %s\n",user->user.phonenum);
+      printf("sex: %s\n",user->user.sex);
+      printf("age: %d\n",user->user.age);
+  }
+}
+
+
+ulink search_user_by_name(char username[])
+{
+  ulink user,temp;
+  user=adminlist;
+  //check if it is the head
+
+  while(user!=NULL)
+  {
+
+    if(strcmp(user->user.username,username)==0)
+    {
+      display_user(user);
+      return user;
+    }
+    user=user->next;
+  }
+  printf("user %s not exist!\n",username);
+  return NULL;
+}
+
+ulink search_user_by_id(int id)
+{
+  ulink user;
+  user=adminlist;
+  //check if it is the head
+  while(user!=NULL)
+  {
+
+    if(user->user.id==id)
+    {
+      display_user(user);
+      return user;
+    }
+  user=user->next;
+  }
+  printf("user id %d not exist!\n",id);
+  return NULL;
+}
+
+int user_delete_by_name(char username[])
+{
+  ulink user,temp;
+  user=adminlist;
+  //check if it is the head
+  if(strcmp(user->user.username,username)==0)
+  {
+   if(user->next==NULL)
+     adminlist=NULL;
+  else
+     adminlist=user->next;
+  return 0;
+  }
+
+  while(user->next!=NULL)
+  {
+
+    temp=user;
+    user=user->next;
+    if(strcmp(user->user.username,username)==0)
+    {
+      temp->next=user->next;
+      return 0;
+    }
+
+  }
+  return -1;
 
 }
 
-void user_delete_by_id(int id)
+int user_delete_by_id(int id)
 {
+  ulink user,temp;
+  user=adminlist;
+  //check if it is the head
+  if(user->user.id==id)
+  {
+   if(user->next==NULL)
+     adminlist=NULL;
+  else
+     adminlist=user->next;
+  return 0;
+  }
 
+  while(user->next!=NULL)
+  {
+
+    temp=user;
+    user=user->next;
+    if(user->user.id==id)
+    {
+      temp->next=user->next;
+      return 0;
+    }
+
+  }
+  return -1;
 }
 
 
@@ -305,6 +531,7 @@ loginlink login()
    llink->usertype=usertype;
    strcpy(llink->username,username);
    return llink;
+
 }
 
 int getusername(char username[],int maxusername)
