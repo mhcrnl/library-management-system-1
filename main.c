@@ -68,11 +68,9 @@ void normaluser_UI(char []);
 ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
 void init_userlist(void);
-ulink user_insert(ulink,ulink);
+void user_insert(ulink,ulink);
 void delete_user(void);
 void add_user(void);
-void user_delete_by_name(char []);
-void user_delete_by_id(int);
 void modify_user(void);
 int search_user(void);
 void user_display(ulink);
@@ -80,10 +78,9 @@ ulink search_user_by_name(char []);
 ulink search_user_by_id(int);
 int user_delete_by_name(char []);
 int user_delete_by_id(int);
-
-
-
-
+void user_manageUI(char []);
+void book_manageUI(void);
+void borrow_manageUI(void);
 
 static ulink adminlist;
 static ulink normallist;
@@ -92,7 +89,7 @@ static int user_id;
 int main()
 { int c;
   loginlink llink=NULL;
-  while(true){
+  while(1){
   free(llink);
   llink=login();
   if(llink->usertype==ADMIN)
@@ -103,8 +100,11 @@ int main()
     printf("Login Fail , Can't find a match in user DB\n");
   printf("Wanna Exit?[E|e], otherwise retry\n");
   c = getchar();
+  printf("c is %c\n",c);
   if(c=='E'||c=='e')
     break;
+  else
+    getchar();
 }
 return 0;
 }
@@ -130,6 +130,7 @@ void admin_UI(char username[])
   printf("1. User Management\n2. Book Management\n3. Borrow Management\n4. Exit\n");
   printf("Which service do you like?[ 1 ]\n");
   c=getchar();
+  getchar();
   switch(c){
     case '\n':
     case '1':
@@ -151,42 +152,57 @@ void admin_UI(char username[])
   }
  }
 
-void user_management(char username[])
+ void book_manageUI(void)
+ {
+   printf("book manageUI\n");
+ }
+ void borrow_manageUI(void)
+ {
+   printf("borrow manageUI\n");
+ }
+
+void user_manageUI(char username[])
 {
   int choice,flag=1;
-  while(flag){
+  while(flag--){
   printf("############# User Management Menu for user '%s' #############\n",username);
-  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n5. Exit\n");
+  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n5. Exit[E]\n");
   choice=getchar();
+  printf("choice is %c\n",choice);
   switch(choice)
   {
     case '1':
     case 'A':
     case 'a':
+      getchar();
       add_user();
       break;
     case '2':
     case 'D':
     case 'd':
+      getchar();
       delete_user();
       break;
     case '3':
     case 'S':
     case 's':
+      getchar();
       search_user();
       break;
     case '4':
     case 'M':
     case 'm':
+      getchar();
       modify_user();
       break;
     case '5':
     case 'E':
     case 'e':
-      flag=1;
+      getchar();
       break;
     default:
       printf("Please input a valid option\n");
+      flag=1;
       break;
   }
 
@@ -203,7 +219,7 @@ void add_user()
   ulink userlink=NULL;
   usertype=FORBIDDEN;
 
-  while(true)
+  while(1)
   {
     printf("Please input user info that you want to add:\n");
     usernamelen=getusername(username,MAXUSERNAME);
@@ -216,8 +232,7 @@ void add_user()
     scanf("%s",phonenum);
     printf("SEX:\n");
     scanf("%s",sex);
-
-    if(username<6||passwordlen<6)
+    if(strlen(username)<6||passwordlen<6)
       printf("username and password should not be less than 6\n");
     else if(usertype!=ADMIN&&usertype!=NORMAL_USER)
       printf("usertype %d is not correct",usertype);
@@ -230,7 +245,7 @@ void add_user()
       userlink->next=NULL;
       if(usertype==ADMIN)
         user_insert(adminlist,userlink);
-      else(usertype==NORMAL_USER)
+      else if(usertype==NORMAL_USER)
         user_insert(normallist,userlink);
       break;
     }
@@ -245,7 +260,7 @@ void delete_user()
   int usernamelen,option,id;
   ulink userlink=NULL;
 
-  while(true)
+  while(1)
   {
     printf("Select user by ID[I] or by username[U]?\n");
     option=getchar();
@@ -278,6 +293,7 @@ int search_user()
 {
    char username[MAXUSERNAME];
    int id,option,flag;
+   ulink user;
    flag=1;
    while(flag--){
    printf("Search user by name[N] or id[I]:");
@@ -287,13 +303,13 @@ int search_user()
       case 'N':
       case 'n':
           getusername(username,MAXUSERNAME);
-          search_user_by_name(username);
+          user=search_user_by_name(username);
           break;
       case 'I':
       case 'i':
           printf("Please input user ID:\n");
           scanf("%d",&id);
-          search_user_by_id(id);
+          user=search_user_by_id(id);
           break;
       default:
          printf("Unknown option\n");
@@ -301,6 +317,10 @@ int search_user()
          break;
    }
 }
+    if(user)
+    return 0;
+    else
+    return -1;
 }
 
 void modify_user()
@@ -345,7 +365,7 @@ else
   printf("Change info for user %s",user->user.username);
   printf("Usertype: %d ,[m/M] to modify ,other to skip\n",user->user.usertype);
   choice=getchar();
-  if(choice==m||choice==M)
+  if(choice=='m'||choice=='M')
   {
     scanf("%d",&usertype);
     user->user.usertype=usertype;
@@ -353,28 +373,28 @@ else
 
   printf("Password: %s ,[m/M] to modify ,other to skip\n",user->user.password);
   choice=getchar();
-  if(choice==m||choice==M)
+  if(choice=='m'||choice=='M')
   {
     scanf("%s",password);
     strcpy(user->user.password,password);
   }
   printf("Phonenum: %s ,[m/M] to modify ,other to skip\n",user->user.phonenum);
   choice=getchar();
-  if(choice==m||choice==M)
+  if(choice=='m'||choice=='M')
   {
     scanf("%s",phonenum);
     strcpy(user->user.phonenum,phonenum);
   }
   printf("Sex: %s ,[m/M] to modify ,other to skip\n",user->user.sex);
   choice=getchar();
-  if(choice==m||choice==M)
+  if(choice=='m'||choice=='M')
   {
     scanf("%s",sex);
     strcpy(user->user.sex,sex);
   }
   printf("Age: %d ,[m/M] to modify ,other to skip\n",user->user.age);
   choice=getchar();
-  if(choice==m||choice==M)
+  if(choice=='m'||choice=='M')
   {
     scanf("%d",&age);
     user->user.age=age;
@@ -412,7 +432,7 @@ ulink search_user_by_name(char username[])
 
     if(strcmp(user->user.username,username)==0)
     {
-      display_user(user);
+      user_display(user);
       return user;
     }
     user=user->next;
@@ -431,7 +451,7 @@ ulink search_user_by_id(int id)
 
     if(user->user.id==id)
     {
-      display_user(user);
+      user_display(user);
       return user;
     }
   user=user->next;
