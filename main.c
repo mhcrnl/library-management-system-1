@@ -165,7 +165,7 @@ void user_manageUI(char username[])
   int choice,flag=1;
   while(flag--){
   printf("############# User Management Menu for user '%s' #############\n",username);
-  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n5. Exit[E]\n");
+  printf("1.Add user[A]\n2.Delete user[D]\n3.Search user[S]\n4.Modify user[M]\n5. Go to upper level[E]\n");
   choice=getchar();
   printf("choice is %c\n",choice);
   switch(choice)
@@ -175,24 +175,28 @@ void user_manageUI(char username[])
     case 'a':
       getchar();
       add_user();
+      flag=1;
       break;
     case '2':
     case 'D':
     case 'd':
       getchar();
       delete_user();
+      flag=1;
       break;
     case '3':
     case 'S':
     case 's':
       getchar();
       search_user();
+      flag=1;
       break;
     case '4':
     case 'M':
     case 'm':
       getchar();
       modify_user();
+      flag=1;
       break;
     case '5':
     case 'E':
@@ -287,10 +291,10 @@ void delete_user()
   {
     printf("Please input user ID that you want to delete:\n");
     scanf("%d",&id);
-    {
-        user_delete_by_id(id);
-        break;
-    }
+    getchar();
+    user_delete_by_id(id);
+    break;
+
   }
   else
     printf("Unknown option\n");
@@ -320,6 +324,7 @@ int search_user()
       case 'i':
           printf("Please input user ID:\n");
           scanf("%d",&id);
+          getchar();
           user=search_user_by_id(id);
           break;
       default:
@@ -343,7 +348,7 @@ void modify_user()
   char password[MAXPASSWD];
   char phonenum[MAXPHONENUM];
   char sex[10];
-  int id,option,flag,choice,usertype,age;
+  int id,option,flag,choice,usertype,age,old_usertype;
   ulink user=NULL;
   flag=1;
   while(flag--){
@@ -361,6 +366,7 @@ void modify_user()
      case 'i':
          printf("Please input user ID:\n");
          scanf("%d",&id);
+         getchar();
          user=search_user_by_id(id);
          break;
     case 'q':
@@ -384,6 +390,7 @@ else
   {
     printf("new usertype is: ");
     scanf("%d",&usertype);
+    old_usertype=user->user.usertype;
     user->user.usertype=usertype;
     getchar();
   }
@@ -426,7 +433,16 @@ else
   }
   printf("User info modification done\nnew user info is:\n");
   user_display(user);
+  if(user->user.usertype!=old_usertype)
+  {
+    user_delete_by_name(user->user.username);
+    if(user->user.usertype==ADMIN)
+      user_insert(&adminlist,user);
+    else
+      user_insert(&normallist,user);
 }
+
+  }
 }
 
 void user_display(ulink user)
