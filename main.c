@@ -68,7 +68,7 @@ void normaluser_UI(char []);
 ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
 void init_userlist(void);
-void user_insert(ulink,ulink);
+void user_insert(ulink *,ulink);
 void delete_user(void);
 void add_user(void);
 void modify_user(void);
@@ -100,7 +100,6 @@ int main()
     printf("Login Fail , Can't find a match in user DB\n");
   printf("Wanna Exit?[E|e], otherwise retry\n");
   c = getchar();
-  printf("c is %c\n",c);
   if(c=='E'||c=='e')
     break;
   else
@@ -224,14 +223,15 @@ void add_user()
     printf("Please input user info that you want to add:\n");
     usernamelen=getusername(username,MAXUSERNAME);
     passwordlen=getpassword(password,MAXPASSWD);
-    printf("USERTYPE:\n");
+    printf("USERTYPE:");
     scanf("%d",&usertype);
-    printf("AGE:\n");
+    printf("AGE:");
     scanf("%d",&age);
-    printf("PHONENUMBER:\n");
+    printf("PHONENUMBER:");
     scanf("%s",phonenum);
-    printf("SEX:\n");
+    printf("SEX:");
     scanf("%s",sex);
+    getchar();
     if(strlen(username)<6||passwordlen<6)
       printf("username and password should not be less than 6\n");
     else if(usertype!=ADMIN&&usertype!=NORMAL_USER)
@@ -241,12 +241,19 @@ void add_user()
       userlink=(ulink)malloc(sizeof(Usernode));
       strcpy(userlink->user.username,username);
       strcpy(userlink->user.password,password);
+      userlink->user.age=age;
+      strcpy(userlink->user.phonenum,phonenum);
+      strcpy(userlink->user.sex,sex);
       userlink->user.usertype=usertype;
       userlink->next=NULL;
       if(usertype==ADMIN)
-        user_insert(adminlist,userlink);
+      {  user_insert(&adminlist,userlink);
+         printf("user %s successfully added to admin user list\n",userlink->user.username);
+       }
       else if(usertype==NORMAL_USER)
-        user_insert(normallist,userlink);
+      { user_insert(&normallist,userlink);
+        printf("user %s successfully added to normal user list\n",userlink->user.username);
+      }
       break;
     }
   }
@@ -264,6 +271,7 @@ void delete_user()
   {
     printf("Select user by ID[I] or by username[U]?\n");
     option=getchar();
+    getchar();
     if(option=='U' || option=='u')
     {  printf("Please input username that you want to delete:\n");
        usernamelen=getusername(username,MAXUSERNAME);
@@ -272,6 +280,7 @@ void delete_user()
     else
     {
         user_delete_by_name(username);
+        break;
     }
   }
   else if(option=='I'||option=='i')
@@ -280,6 +289,7 @@ void delete_user()
     scanf("%d",&id);
     {
         user_delete_by_id(id);
+        break;
     }
   }
   else
@@ -298,6 +308,7 @@ int search_user()
    while(flag--){
    printf("Search user by name[N] or id[I]:");
    option=getchar();
+   getchar();
    switch(option)
    {
       case 'N':
@@ -318,7 +329,10 @@ int search_user()
    }
 }
     if(user)
-    return 0;
+    {
+      printf("User is found\n");
+      return 0;
+     }
     else
     return -1;
 }
@@ -335,6 +349,7 @@ void modify_user()
   while(flag--){
   printf("Locate user by name[N] or id[I]:");
   option=getchar();
+  getchar();
   switch(option)
   {
      case 'N':
@@ -362,42 +377,52 @@ if(user==NULL)
   printf("User not found\n");
 else
 {
-  printf("Change info for user %s",user->user.username);
+  printf("Change info for user %s\n",user->user.username);
   printf("Usertype: %d ,[m/M] to modify ,other to skip\n",user->user.usertype);
   choice=getchar();
   if(choice=='m'||choice=='M')
   {
+    printf("new usertype is: ");
     scanf("%d",&usertype);
     user->user.usertype=usertype;
+    getchar();
   }
 
   printf("Password: %s ,[m/M] to modify ,other to skip\n",user->user.password);
   choice=getchar();
   if(choice=='m'||choice=='M')
   {
+    printf("new password is: ");
     scanf("%s",password);
     strcpy(user->user.password,password);
+    getchar();
   }
   printf("Phonenum: %s ,[m/M] to modify ,other to skip\n",user->user.phonenum);
   choice=getchar();
   if(choice=='m'||choice=='M')
   {
+    printf("new phonenumber is: ");
     scanf("%s",phonenum);
     strcpy(user->user.phonenum,phonenum);
+    getchar();
   }
   printf("Sex: %s ,[m/M] to modify ,other to skip\n",user->user.sex);
   choice=getchar();
   if(choice=='m'||choice=='M')
   {
+    printf("new sex value is: ");
     scanf("%s",sex);
     strcpy(user->user.sex,sex);
+    getchar();
   }
   printf("Age: %d ,[m/M] to modify ,other to skip\n",user->user.age);
   choice=getchar();
   if(choice=='m'||choice=='M')
   {
+    printf("new age is: ");
     scanf("%d",&age);
     user->user.age=age;
+    getchar();
   }
   printf("User info modification done\nnew user info is:\n");
   user_display(user);
@@ -471,6 +496,7 @@ int user_delete_by_name(char username[])
      adminlist=NULL;
   else
      adminlist=user->next;
+  printf("user delete successfully\n");
   return 0;
   }
 
@@ -482,10 +508,12 @@ int user_delete_by_name(char username[])
     if(strcmp(user->user.username,username)==0)
     {
       temp->next=user->next;
+      printf("user delete successfully\n");
       return 0;
     }
 
   }
+  printf("user not found\n");
   return -1;
 
 }
@@ -501,6 +529,7 @@ int user_delete_by_id(int id)
      adminlist=NULL;
   else
      adminlist=user->next;
+  printf("user delete successfully\n");
   return 0;
   }
 
@@ -512,17 +541,22 @@ int user_delete_by_id(int id)
     if(user->user.id==id)
     {
       temp->next=user->next;
+      printf("user delete successfully\n");
       return 0;
     }
 
   }
+  printf("user not found\n");
   return -1;
 }
 
 
-void user_insert(ulink userlist,ulink userlink)
+void user_insert(ulink *userlistptr,ulink userlink)
 {
-   ulink temp;
+   ulink temp,userlist;
+   userlist=*userlistptr;
+   if(userlist==NULL)
+     userlist=userlink;
    for(temp=userlist;temp->next!=NULL;temp=temp->next)
       ;
    temp->next=userlink;
