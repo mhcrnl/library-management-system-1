@@ -79,7 +79,7 @@ ulink search_user_by_id(int);
 int user_delete_by_name(char []);
 int user_delete_by_id(int);
 void user_manageUI(char []);
-void book_manageUI(void);
+void book_manageUI(char []);
 void borrow_manageUI(void);
 void add_book(void);
 void book_insert(blink *,blink);
@@ -143,7 +143,7 @@ void admin_UI(char username[])
       user_manageUI(username);
       break;
     case '2':
-      book_manageUI();
+      book_manageUI(username);
       break;
     case '3':
       borrow_manageUI();
@@ -165,13 +165,16 @@ void add_book()
   int totalcount;
   blink booklink=NULL;
 
-    printf("Please input user info that you want to add:\n");
+    printf("Please input book info that you want to add:\n");
     printf("Bookname: ");
-    scanf("%s",name);
+    scanf("%[^\n]",name);
+    getchar();
     printf("Author: ");
-    scanf("%s",author);
+    scanf("%[^\n]",author);
+    getchar();
     printf("Total book counts: ");
     scanf("%d",&totalcount);
+    getchar();
 
     booklink=(blink)malloc(sizeof(Booknode));
     strcpy(booklink->book.name,name);
@@ -188,6 +191,7 @@ void add_book()
   {
     char name[MAXBOOKNAME];
     blink booklink=NULL;
+    int option,id;
 
     while(1)
     {
@@ -217,10 +221,43 @@ void add_book()
 
 int book_delete_by_id(int id)
 {
+  blink booklink,temp;
+  booklink=booklist;
+  //check if it is the head
+  if(booklist==NULL)
+    printf("No book in the book list\n");
+  if(booklink->book.id==id)
+  {
+  temp=booklink;
+   if(booklink->next==NULL)
+     booklist=NULL;
+  else
+  {   booklist=booklink->next;
+      booklink=booklink->next;
+    }
+  printf("book %s delete successfully\n",temp->book.name);
+  free(temp);
+  return 0;
+  }
 
+  while(booklink->next!=NULL)
+  {
+    temp=booklink;
+    booklink=booklink->next;
+    if(booklink->book.id==id)
+    {
+      temp->next=booklink->next;
+      printf("book delete successfully\n");
+      free(booklink);
+      return 0;
+    }
+
+  }
+  printf("book not found in booklist\n");
+  return -1;
 }
 
-int book_delete_by_name(char name[MAXBOOKNAME])
+int book_delete_by_name(char name[])
 {
   blink booklink,temp;
   booklink=booklist;
@@ -229,22 +266,24 @@ int book_delete_by_name(char name[MAXBOOKNAME])
     printf("No book in the list\n");
   if(strcmp(booklink->book.name,name)==0)
   {
+   temp=booklink;
    if(booklink->next==NULL)
      booklist=NULL;
   else
      booklist=booklink->next;
+  free(temp);
   printf("user delete successfully\n");
   return 0;
   }
 
   while(booklink->next!=NULL)
   {
-
     temp=booklink;
     booklink=booklink->next;
-    if(strcmp(booklink->book.username,name)==0)
+    if(strcmp(booklink->book.name,name)==0)
     {
-      temp->next=blink->next;
+      temp->next=booklink->next;
+      free(booklink);
       printf("user delete successfully\n");
       return 0;
     }
@@ -254,7 +293,7 @@ int book_delete_by_name(char name[MAXBOOKNAME])
   return -1;
 }
 
- void book_manageUI(void)
+ void book_manageUI(char username[])
  {
    int choice,flag=1;
    while(flag--){
@@ -660,22 +699,24 @@ int user_delete_by_name(char username[])
     printf("No user in the admin list\n");
   if(strcmp(user->user.username,username)==0)
   {
+   temp=user;
    if(user->next==NULL)
      adminlist=NULL;
   else
      adminlist=user->next;
+  free(temp);
   printf("user delete successfully\n");
   return 0;
   }
 
   while(user->next!=NULL)
   {
-
     temp=user;
     user=user->next;
     if(strcmp(user->user.username,username)==0)
     {
       temp->next=user->next;
+      free(user);
       printf("user delete successfully\n");
       return 0;
     }
@@ -693,6 +734,7 @@ int user_delete_by_name(char username[])
      normallist=NULL;
   else
      normallist=user->next;
+  free(user);
   printf("user delete successfully\n");
   return 0;
   }
@@ -705,6 +747,7 @@ int user_delete_by_name(char username[])
     if(strcmp(user->user.username,username)==0)
     {
       temp->next=user->next;
+      free(user);
       printf("user delete successfully\n");
       return 0;
     }
@@ -723,10 +766,12 @@ int user_delete_by_id(int id)
     printf("No user in the admin list\n");
   if(user->user.id==id)
   {
+   temp=user;
    if(user->next==NULL)
      adminlist=NULL;
   else
      adminlist=user->next;
+  free(temp);
   printf("user delete successfully\n");
   return 0;
   }
@@ -739,6 +784,7 @@ int user_delete_by_id(int id)
     if(user->user.id==id)
     {
       temp->next=user->next;
+      free(user);
       printf("user delete successfully\n");
       return 0;
     }
@@ -756,6 +802,7 @@ int user_delete_by_id(int id)
      normallist=NULL;
   else
      normallist=user->next;
+  free(user);
   printf("user delete successfully\n");
   return 0;
   }
@@ -768,6 +815,7 @@ int user_delete_by_id(int id)
     if(user->user.id==id)
     {
       temp->next=user->next;
+      free(user);
       printf("user delete successfully\n");
       return 0;
     }
