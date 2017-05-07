@@ -67,7 +67,7 @@ void admin_UI(char []);
 void normaluser_UI(char []);
 ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
-void init_userlist(void);
+void init(void);
 void user_insert(ulink *,ulink);
 void delete_user(void);
 void add_user(void);
@@ -81,9 +81,15 @@ int user_delete_by_id(int);
 void user_manageUI(char []);
 void book_manageUI(void);
 void borrow_manageUI(void);
+void add_book(void);
+void book_insert(blink *,blink);
+void delete_book(void);
+int book_delete_by_name(char []);
+int book_delete_by_id(int);
 
 static ulink adminlist;
 static ulink normallist;
+static blink booklist;
 static int user_id;
 
 int main()
@@ -108,17 +114,18 @@ int main()
 return 0;
 }
 
-void init_userlist()
+void init()
 {
   adminlist=NULL;
   normallist=NULL;
+  booklist=NULL;
   adminlist=(ulink)malloc(sizeof(Usernode));
   strcpy(adminlist->user.username,"admin");
   strcpy(adminlist->user.password,"czj050507");
   adminlist->user.id=1;
   adminlist->next=NULL;
-
 }
+
 
 void admin_UI(char username[])
 {
@@ -151,9 +158,152 @@ void admin_UI(char username[])
   }
  }
 
+void add_book()
+{
+  char name[MAXBOOKNAME];
+  char author[MAXNAME];
+  int totalcount;
+  blink booklink=NULL;
+
+    printf("Please input user info that you want to add:\n");
+    printf("Bookname: ");
+    scanf("%s",name);
+    printf("Author: ");
+    scanf("%s",author);
+    printf("Total book counts: ");
+    scanf("%d",&totalcount);
+
+    booklink=(blink)malloc(sizeof(Booknode));
+    strcpy(booklink->book.name,name);
+    strcpy(booklink->book.author,author);
+    booklink->book.totalcount=totalcount;
+    booklink->next=NULL;
+
+    book_insert(&booklist,booklink);
+    printf("book %s successfully added to book list\n",booklink->book.name);
+
+  }
+
+  void delete_book()
+  {
+    char name[MAXBOOKNAME];
+    blink booklink=NULL;
+
+    while(1)
+    {
+      printf("Select book by ID[I] or by bookname[N]?\n");
+      option=getchar();
+      getchar();
+      if(option=='N' || option=='n')
+      {  printf("Please input bookname that you want to delete:\n");
+         scanf("%s",name);
+         book_delete_by_name(name);
+          break;
+      }
+    else if(option=='I'||option=='i')
+    {
+      printf("Please input book ID that you want to delete:\n");
+      scanf("%d",&id);
+      getchar();
+      book_delete_by_id(id);
+      break;
+
+    }
+    else
+      printf("Unknown option\n");
+
+  }
+    }
+
+int book_delete_by_id(int id)
+{
+
+}
+
+int book_delete_by_name(char name[MAXBOOKNAME])
+{
+  blink booklink,temp;
+  booklink=booklist;
+  //check if it is the head
+  if(booklist==NULL)
+    printf("No book in the list\n");
+  if(strcmp(booklink->book.name,name)==0)
+  {
+   if(booklink->next==NULL)
+     booklist=NULL;
+  else
+     booklist=booklink->next;
+  printf("user delete successfully\n");
+  return 0;
+  }
+
+  while(booklink->next!=NULL)
+  {
+
+    temp=booklink;
+    booklink=booklink->next;
+    if(strcmp(booklink->book.username,name)==0)
+    {
+      temp->next=blink->next;
+      printf("user delete successfully\n");
+      return 0;
+    }
+
+  }
+  printf("user not found\n");
+  return -1;
+}
+
  void book_manageUI(void)
  {
-   printf("book manageUI\n");
+   int choice,flag=1;
+   while(flag--){
+   printf("############# Book Management Menu for user '%s' #############\n",username);
+   printf("1.Add book[A]\n2.Delete book[D]\n3.Search book[S]\n4.Modify book[M]\n5. Go to upper level[E]\n");
+   choice=getchar();
+   printf("choice is %c\n",choice);
+   switch(choice)
+   {
+     case '1':
+     case 'A':
+     case 'a':
+       getchar();
+       add_book();
+       flag=1;
+       break;
+     case '2':
+     case 'D':
+     case 'd':
+       getchar();
+       delete_user();
+       flag=1;
+       break;
+     case '3':
+     case 'S':
+     case 's':
+       getchar();
+       search_user();
+       flag=1;
+       break;
+     case '4':
+     case 'M':
+     case 'm':
+       getchar();
+       modify_user();
+       flag=1;
+       break;
+     case '5':
+     case 'E':
+     case 'e':
+       getchar();
+       break;
+     default:
+       printf("Please input a valid option\n");
+       flag=1;
+       break;
+   }
+
+ }
  }
  void borrow_manageUI(void)
  {
@@ -506,6 +656,8 @@ int user_delete_by_name(char username[])
   ulink user,temp;
   user=adminlist;
   //check if it is the head
+  if(adminlist==NULL)
+    printf("No user in the admin list\n");
   if(strcmp(user->user.username,username)==0)
   {
    if(user->next==NULL)
@@ -529,9 +681,37 @@ int user_delete_by_name(char username[])
     }
 
   }
-  printf("user not found\n");
-  return -1;
+  printf("user not found in admin list\n");
 
+  user=normallist;
+  //check if it is the head
+  if(normallist==NULL)
+    printf("No user in the normal user list\n");
+  if(strcmp(user->user.username,username)==0)
+  {
+   if(user->next==NULL)
+     normallist=NULL;
+  else
+     normallist=user->next;
+  printf("user delete successfully\n");
+  return 0;
+  }
+
+  while(user->next!=NULL)
+  {
+
+    temp=user;
+    user=user->next;
+    if(strcmp(user->user.username,username)==0)
+    {
+      temp->next=user->next;
+      printf("user delete successfully\n");
+      return 0;
+    }
+
+  }
+
+  return -1;
 }
 
 int user_delete_by_id(int id)
@@ -539,6 +719,8 @@ int user_delete_by_id(int id)
   ulink user,temp;
   user=adminlist;
   //check if it is the head
+  if(adminlist==NULL)
+    printf("No user in the admin list\n");
   if(user->user.id==id)
   {
    if(user->next==NULL)
@@ -562,17 +744,62 @@ int user_delete_by_id(int id)
     }
 
   }
-  printf("user not found\n");
+  printf("user not found in adminlist\n");
+
+  user=normallist;
+  //check if it is the head
+  if(normallist==NULL)
+    printf("No user in the normal list\n");
+  if(user->user.id==id)
+  {
+   if(user->next==NULL)
+     normallist=NULL;
+  else
+     normallist=user->next;
+  printf("user delete successfully\n");
+  return 0;
+  }
+
+  while(user->next!=NULL)
+  {
+
+    temp=user;
+    user=user->next;
+    if(user->user.id==id)
+    {
+      temp->next=user->next;
+      printf("user delete successfully\n");
+      return 0;
+    }
+
+  }
+  printf("user not found in normallist\n");
+
   return -1;
 }
 
+void book_insert(blink *booklistptr,blink booklink)
+{
+  blink temp,booklist;
+  booklist=*booklistptr;
+  if(booklist==NULL)
+  { booklist=booklink;
+    booklist->book.id=1;
+  }
+  for(temp=booklist;temp->next!=NULL;temp=temp->next)
+     ;
+  temp->next=booklink;
+  booklink->book.id=temp->book.id+1;
+}
 
 void user_insert(ulink *userlistptr,ulink userlink)
 {
    ulink temp,userlist;
    userlist=*userlistptr;
    if(userlist==NULL)
-     userlist=userlink;
+   { userlist=userlink;
+     userlist->user.id=1;
+   }
    for(temp=userlist;temp->next!=NULL;temp=temp->next)
       ;
    temp->next=userlink;
@@ -626,7 +853,7 @@ int authorize(char username[],char password[])
 {
   static ulink adminptr,normalptr;
   int usertype=FORBIDDEN;
-  init_userlist();
+  init();
 
   //normallist=(ulink)malloc(size(Usernode));
   //normallist->user.username="oscar";
