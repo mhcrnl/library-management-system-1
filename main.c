@@ -86,6 +86,11 @@ void book_insert(blink *,blink);
 void delete_book(void);
 int book_delete_by_name(char []);
 int book_delete_by_id(int);
+int search_book(void);
+blink search_book_by_name(char []);
+blink search_book_by_id(int);
+void book_display(blink);
+void modify_book();
 
 static ulink adminlist;
 static ulink normallist;
@@ -157,6 +162,10 @@ void admin_UI(char username[])
   }
   }
  }
+void modify_book()
+{
+
+}
 
 void add_book()
 {
@@ -293,6 +302,101 @@ int book_delete_by_name(char name[])
   return -1;
 }
 
+int search_book()
+{
+  char name[MAXBOOKNAME];
+  int id,option,flag;
+  blink book;
+  flag=1;
+  while(flag--){
+  printf("Search book by name[N] or id[I]:");
+  option=getchar();
+  getchar();
+  switch(option)
+  {
+     case 'N':
+     case 'n':
+         printf("Please input bookname:");
+         scanf("%[^\n]",name);
+         getchar();
+         book=search_book_by_name(name);
+         break;
+     case 'I':
+     case 'i':
+         printf("Please input book ID:\n");
+         scanf("%d",&id);
+         getchar();
+         book=search_book_by_id(id);
+         break;
+     default:
+        printf("Unknown option\n");
+        flag=1;
+        break;
+  }
+}
+   if(book)
+   {
+     printf("Book is found\n");
+     return 0;
+    }
+   else
+   return -1;
+}
+
+blink search_book_by_name(char name[])
+{
+  blink booklink,temp;
+  booklink=booklist;
+  //check if it is the head
+
+  while(booklink!=NULL)
+  {
+
+    if(strcmp(booklink->book.name,name)==0)
+    {
+      book_display(booklink);
+      return booklink;
+    }
+    booklink=booklink->next;
+  }
+  printf("book '%s' not exist!\n",name);
+  return NULL;
+}
+
+blink search_book_by_id(int id)
+{
+  blink booklink;
+  booklink=booklist;
+  //check if it is the head
+  while(booklink!=NULL)
+  {
+
+    if(booklink->book.id==id)
+    {
+      book_display(booklink);
+      return booklink;
+    }
+  booklink=booklink->next;
+  }
+  printf("book id %d not exist!\n",id);
+  return NULL;
+}
+
+void book_display(blink booklink)
+{
+
+  if(booklink==NULL)
+   printf("book not exist\n");
+  else
+  {
+      printf("Book ID: %d\n",booklink->book.id);
+      printf("Bookname: %s\n",booklink->book.name);
+      printf("Author: %s\n",booklink->book.author);
+      printf("Total book count: %d\n",booklink->book.totalcount);
+      printf("Borrow count: %d\n",booklink->book.borrowcount);
+  }
+}
+
  void book_manageUI(char username[])
  {
    int choice,flag=1;
@@ -314,21 +418,21 @@ int book_delete_by_name(char name[])
      case 'D':
      case 'd':
        getchar();
-       delete_user();
+       delete_book();
        flag=1;
        break;
      case '3':
      case 'S':
      case 's':
        getchar();
-       search_user();
+       search_book();
        flag=1;
        break;
      case '4':
      case 'M':
      case 'm':
        getchar();
-       modify_user();
+       modify_book();
        flag=1;
        break;
      case '5':
@@ -828,11 +932,12 @@ int user_delete_by_id(int id)
 
 void book_insert(blink *booklistptr,blink booklink)
 {
-  blink temp,booklist;
+  blink temp;
   booklist=*booklistptr;
   if(booklist==NULL)
   { booklist=booklink;
     booklist->book.id=1;
+    return;
   }
   for(temp=booklist;temp->next!=NULL;temp=temp->next)
      ;
@@ -847,6 +952,7 @@ void user_insert(ulink *userlistptr,ulink userlink)
    if(userlist==NULL)
    { userlist=userlink;
      userlist->user.id=1;
+     return;
    }
    for(temp=userlist;temp->next!=NULL;temp=temp->next)
       ;
