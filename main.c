@@ -4,6 +4,7 @@
 #include<errno.h>
 #include<unistd.h>
 #include<stdlib.h>
+#include<time.h>
 
 #define ADMIN 1
 #define NORMAL_USER 0
@@ -80,7 +81,7 @@ int user_delete_by_name(char []);
 int user_delete_by_id(int);
 void user_manageUI(char []);
 void book_manageUI(char []);
-void borrow_manageUI(void);
+void borrow_manageUI(char []);
 void add_book(void);
 void book_insert(blink *,blink);
 void delete_book(void);
@@ -90,11 +91,15 @@ int search_book(void);
 blink search_book_by_name(char []);
 blink search_book_by_id(int);
 void book_display(blink);
-void modify_book();
+void modify_book(void);
+int borrow_book(void);
+int return_book(void);
+int search_borrow(void);
 
 static ulink adminlist;
 static ulink normallist;
 static blink booklist;
+static borrowlink borrowlist;
 static int user_id;
 
 int main()
@@ -124,6 +129,7 @@ void init()
   adminlist=NULL;
   normallist=NULL;
   booklist=NULL;
+  borrowlist=NULL;
   adminlist=(ulink)malloc(sizeof(Usernode));
   strcpy(adminlist->user.username,"admin");
   strcpy(adminlist->user.password,"czj050507");
@@ -151,7 +157,7 @@ void admin_UI(char username[])
       book_manageUI(username);
       break;
     case '3':
-      borrow_manageUI();
+      borrow_manageUI(username);
       break;
     case '4':
       flag=0;
@@ -541,9 +547,66 @@ void book_display(blink booklink)
 
  }
  }
- void borrow_manageUI(void)
+
+int borrow_book(void)
+{
+  return -1;
+}
+
+int return_book(void)
+{
+ return -1;
+}
+
+int search_borrow(void)
+{
+return -1;
+}
+
+ void borrow_manageUI(char username[])
  {
-   printf("borrow manageUI\n");
+   int choice,flag=1;
+   while(flag--){
+   printf("############# Borrow Management Menu for user '%s' #############\n",username);
+   printf("1.Borrow book[B]\n2.Return book[R]\n3.Search borrow[S]\n4. Go to upper level[E]\n");
+   choice=getchar();
+   printf("choice is %c\n",choice);
+   switch(choice)
+   {
+     case '1':
+     case 'B':
+     case 'b':
+       getchar();
+       borrow_book();
+       flag=1;
+       break;
+     case '2':
+     case 'R':
+     case 'r':
+       getchar();
+       return_book();
+       flag=1;
+       break;
+     case '3':
+     case 'S':
+     case 's':
+       getchar();
+       search_borrow();
+       flag=1;
+       break;
+     case '4':
+     case 'E':
+     case 'e':
+       getchar();
+       break;
+     default:
+       getchar();
+       printf("Please input a valid option\n");
+       flag=1;
+       break;
+   }
+
+ }
  }
 
 void user_manageUI(char username[])
