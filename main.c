@@ -165,6 +165,98 @@ void admin_UI(char username[])
 void modify_book()
 {
 
+  char name[MAXBOOKNAME];
+  char author[MAXNAME];
+  int totalcount,borrowcount;
+  int id,option,flag,choice;
+  blink booklink=NULL;
+  flag=1;
+  while(flag--){
+  printf("Locate book by name[N] or id[I]:");
+  option=getchar();
+  getchar();
+  switch(option)
+  {
+     case 'N':
+     case 'n':
+         printf("Bookname: ");
+         scanf("%[^\n]",name);
+         getchar();
+         booklink=search_book_by_name(name);
+         break;
+     case 'I':
+     case 'i':
+         printf("Book ID:\n");
+         scanf("%d",&id);
+         getchar();
+         booklink=search_book_by_id(id);
+         break;
+    case 'q':
+    case 'Q':
+         break;
+     default:
+        printf("Unknown option\n");
+        flag=1;
+        break;
+  }
+
+}
+if(booklink==NULL)
+  printf("Book not found\n");
+else
+{
+  printf("Change info for Book %s\n",booklink->book.name);
+  printf("Book name: %s ,[m/M] to modify ,other to skip\n",booklink->book.name);
+  choice=getchar();
+
+  if(choice=='m'||choice=='M')
+  {
+    getchar();
+    printf("new book name is: ");
+    scanf("%[^\n]",name);
+    strcpy(booklink->book.name,name);
+    getchar();
+  }
+
+  printf("Author: %s ,[m/M] to modify ,other to skip\n",booklink->book.author);
+  choice=getchar();
+
+  if(choice=='m'||choice=='M')
+  {
+    getchar();
+    printf("new author is: ");
+    scanf("%[^\n]",author);
+    strcpy(booklink->book.author,author);
+    getchar();
+  }
+
+  printf("Total count: %d ,[m/M] to modify ,other to skip\n",booklink->book.totalcount);
+  choice=getchar();
+
+  if(choice=='m'||choice=='M')
+  {
+    getchar();
+    printf("new totalcount is: ");
+    scanf("%d",&totalcount);
+    booklink->book.totalcount=totalcount;
+    getchar();
+  }
+  printf("Borrow count: %d ,[m/M] to modify ,other to skip\n",booklink->book.borrowcount);
+  choice=getchar();
+
+  if(choice=='m'||choice=='M')
+  {
+    getchar();
+    printf("new borrowcount is: ");
+    scanf("%d",&borrowcount);
+    booklink->book.borrowcount=borrowcount;
+    getchar();
+  }
+
+  printf("User info modification done\nnew user info is:\n");
+  book_display(booklink);
+
+  }
 }
 
 void add_book()
@@ -192,7 +284,7 @@ void add_book()
     booklink->next=NULL;
 
     book_insert(&booklist,booklink);
-    printf("book %s successfully added to book list\n",booklink->book.name);
+    printf("book '%s' successfully added to book list\n",booklink->book.name);
 
   }
 
@@ -208,8 +300,9 @@ void add_book()
       option=getchar();
       getchar();
       if(option=='N' || option=='n')
-      {  printf("Please input bookname that you want to delete:\n");
-         scanf("%s",name);
+      {  printf("Please input bookname that you want to delete: ");
+         scanf("%[^\n]",name);
+         getchar();
          book_delete_by_name(name);
           break;
       }
@@ -281,7 +374,7 @@ int book_delete_by_name(char name[])
   else
      booklist=booklink->next;
   free(temp);
-  printf("user delete successfully\n");
+  printf("Book delete successfully\n");
   return 0;
   }
 
@@ -293,12 +386,12 @@ int book_delete_by_name(char name[])
     {
       temp->next=booklink->next;
       free(booklink);
-      printf("user delete successfully\n");
+      printf("Book delete successfully\n");
       return 0;
     }
 
   }
-  printf("user not found\n");
+  printf("Book not found\n");
   return -1;
 }
 
@@ -545,11 +638,11 @@ void add_user()
       userlink->next=NULL;
       if(usertype==ADMIN)
       {  user_insert(&adminlist,userlink);
-         printf("user %s successfully added to admin user list\n",userlink->user.username);
+         printf("user '%s' successfully added to admin user list\n",userlink->user.username);
        }
       else if(usertype==NORMAL_USER)
       { user_insert(&normallist,userlink);
-        printf("user %s successfully added to normal user list\n",userlink->user.username);
+        printf("user '%s' successfully added to normal user list\n",userlink->user.username);
       }
       break;
     }
