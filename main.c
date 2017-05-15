@@ -48,11 +48,12 @@ typedef struct borrow{
   int borrow_id;
   char username[MAXUSERNAME];
   char bookname[MAXBOOKNAME];
+  int borrow_counts;
 }Borrow;
 
 typedef struct borrownode{
   Borrow borrow;
-  struct Borrownode *next;
+  struct borrownode *next;
 }Borrownode,*borrowlink;
 
 typedef struct loginnode{
@@ -69,10 +70,10 @@ void normaluser_UI(char []);
 ulink searchuserlist(ulink ,char [],char []);
 int getusername(char [],int);
 void init(void);
-void user_insert(ulink *,ulink);
+void user_insert(ulink,int);
 void delete_user(void);
 void add_user(void);
-void modify_user(void);
+void modify_user(int);
 int search_user(void);
 void user_display(ulink);
 ulink search_user_by_name(char []);
@@ -95,6 +96,11 @@ void modify_book(void);
 int borrow_book(void);
 int return_book(void);
 int search_borrow(void);
+void borrow_insert(borrowlink *,borrowlink);
+char *get_time(void);
+borrowlink search_borrow_by_username(char []);
+void borrow_display(borrowlink);
+int modify_user_by_ulink(ulink);
 
 static ulink adminlist;
 static ulink normallist;
@@ -105,18 +111,20 @@ static int user_id;
 int main()
 { int c;
   loginlink llink=NULL;
+  init();
   while(1){
   free(llink);
   llink=login();
   if(llink->usertype==ADMIN)
     admin_UI(llink->username);
- else if(llink->usertype==NORMAL_USER)
+  else if(llink->usertype==NORMAL_USER)
     normaluser_UI(llink->username);
- else
+  else
     printf("Login Fail , Can't find a match in user DB\n");
-  printf("Wanna Exit?[E|e], otherwise retry\n");
+  printf("1. Switch user account[S|s]\n");
+  printf("2. Exit?[E|e]\n");
   c = getchar();
-  if(c=='E'||c=='e')
+  if(c=='E'||c=='e'||c=='2')
     break;
   else
     getchar();
@@ -444,7 +452,7 @@ int search_book()
 
 blink search_book_by_name(char name[])
 {
-  blink booklink,temp;
+  blink booklink;
   booklink=booklist;
   //check if it is the head
 
@@ -495,6 +503,22 @@ void book_display(blink booklink)
       printf("Borrow count: %d\n",booklink->book.borrowcount);
   }
 }
+
+void borrow_display(borrowlink borrlink)
+{
+
+  if(borrlink==NULL)
+   printf("borrow record not exist\n");
+  else
+  {
+      printf("Borrow ID: %d\n",borrlink->borrow.borrow_id);
+      printf("Borrow Date: %s\n",borrlink->borrow.borrowdate);
+      printf("User: %s\n",borrlink->borrow.username);
+      printf("Bookname: %s\n",borrlink->borrow.bookname);
+      printf("Borrow count: %d\n",borrlink->borrow.borrow_counts);
+  }
+}
+
 
  void book_manageUI(char username[])
  {
@@ -548,19 +572,142 @@ void book_display(blink booklink)
  }
  }
 
-int borrow_book(void)
+int borrow_book()
 {
-  return -1;
+  char name[MAXBOOKNAME];
+  char username[MAXUSERNAME];
+  int counts;
+  blink booklink=NULL;
+  borrowlink borrlink=(borrowlink)malloc(sizeof(Borrownode));
+
+    printf("Please input book name that you want to borrow:\n");
+    printf("Bookname: ");
+    scanf("%[^\n]",name);
+    getchar();
+    booklink = search_book_by_name(name);
+    if(booklink)
+    {
+      printf("Total count %d , %d books already borrowed out for book '%s' \n",booklink->book.totalcount,booklink->book.borrowcount,name);
+    if(booklink->book.borrowcount==booklink->book.totalcount)
+      printf("Book '%s' all borrowed out\n",name);
+    else
+    {
+      while(1)
+      {
+      printf("Please input your name: ");
+      scanf("%[^\n]",username);
+      getchar();
+      printf("How many copies you want to borrow: ");
+      scanf("%d",&counts);
+      getchar();
+      if(booklink->book.totalcount-booklink->book.borrowcount<counts)
+         printf("There is so many copies left\n");
+      else
+         break;
+       }
+      strcpy(borrlink->borrow.username,username);
+      strcpy(borrlink->borrow.bookname,name);
+      borrlink->borrow.borrow_counts=counts;
+      booklink->book.borrowcount+=counts;
+      borrlink->next=NULL;
+
+    borrow_insert(&borrowlist,borrlink);
+    printf("book '%s' successfully borrowed to '%s' \n",booklink->book.name,username);
+  }
+  }
+   return 1;
 }
+
+char *get_time(void)
+{
+  char *datestr=(char *)malloc(sizeof(char)*MAXDATELEN);
+  time_t a;
+  time(&a);
+  strftime(datestr,MAXDATELEN,"%Y:%m:%d %H:%M:%S",localtime(&a));
+  return datestr;
+}
+
+void borrow_insert(borrowlink * borrowlistptr,borrowlink borrlink)
+{
+
+  borrowlink temp;
+  char borrowdate[MAXDATELEN];
+  borrowlist=*borrowlistptr;
+  char *timeptr;
+  timeptr=get_time();
+  strcpy(borrlink->borrow.borrowdate,timeptr);
+  if(borrowlist==NULL)
+  { borrowlist=borrlink;
+    borrowlist->borrow.borrow_id=1;
+    return;
+  }
+  for(temp=borrowlist;temp->next!=NULL;temp=temp->next)
+     ;
+  temp->next=borrlink;
+  borrlink->borrow.borrow_id=temp->borrow.borrow_id+1;
+}
+
 
 int return_book(void)
 {
- return -1;
+  char username[MAXUSERNAME];
+  borrowlink borrow;
+  int counts;
+  printf("Please input your username: ");
+  scanf("%[^\n]",username);
+  getchar();
+  borrow=search_borrow_by_username(username);
+  if(borrow)
+  {
+    printf("How many copies you want to return: ");
+    scanf("%d",&counts);
+    getchar();
+    borrow->borrow.borrow_counts-=counts;
+    printf("Book '%s' return successfully\n",borrow->borrow.bookname);
+    return 0;
+  }
+  return -1;
 }
 
 int search_borrow(void)
 {
-return -1;
+  char username[MAXUSERNAME];
+  int id,option,flag;
+  borrowlink borrow;
+  flag=1;
+  //while(flag--){
+  printf("Please input username: ");
+  scanf("%[^\n]",username);
+  getchar();
+  borrow=search_borrow_by_username(username);
+   if(borrow)
+   {
+     printf("Borrow record is found\n");
+     return 0;
+    }
+   else
+     return -1;
+  return 0;
+}
+
+borrowlink search_borrow_by_username(char username[])
+{
+  borrowlink borrow;
+  borrow=borrowlist;
+  //check if it is the head
+
+  while(borrow!=NULL)
+  {
+
+    if(strcmp(borrow->borrow.username,username)==0)
+    {
+      borrow_display(borrow);
+      return borrow;
+    }
+    borrow=borrow->next;
+  }
+  printf("User '%s' borrow records not found!\n",username);
+  return NULL;
 }
 
  void borrow_manageUI(char username[])
@@ -644,7 +791,7 @@ void user_manageUI(char username[])
     case 'M':
     case 'm':
       getchar();
-      modify_user();
+      modify_user(ADMIN);
       flag=1;
       break;
     case '5':
@@ -700,11 +847,11 @@ void add_user()
       userlink->user.usertype=usertype;
       userlink->next=NULL;
       if(usertype==ADMIN)
-      {  user_insert(&adminlist,userlink);
+      {  user_insert(userlink,ADMIN);
          printf("user '%s' successfully added to admin user list\n",userlink->user.username);
        }
       else if(usertype==NORMAL_USER)
-      { user_insert(&normallist,userlink);
+      { user_insert(userlink,NORMAL_USER);
         printf("user '%s' successfully added to normal user list\n",userlink->user.username);
       }
       break;
@@ -791,6 +938,80 @@ int search_user()
     return -1;
 }
 
+int modify_user_by_ulink(ulink user)
+{
+  char username[MAXUSERNAME];
+  char password[MAXPASSWD];
+  char phonenum[MAXPHONENUM];
+  char sex[10];
+  int id,option,flag,choice,usertype,age,old_usertype;
+  if(!user)
+    return -1;
+  else
+  {
+    printf("Change info for user %s\n",user->user.username);
+    printf("Usertype: %d ,[m/M] to modify ,other to skip\n",user->user.usertype);
+    choice=getchar();
+    if(choice=='m'||choice=='M')
+    {
+      printf("new usertype is: ");
+      scanf("%d",&usertype);
+      old_usertype=user->user.usertype;
+      user->user.usertype=usertype;
+      getchar();
+    }
+
+    printf("Password: %s ,[m/M] to modify ,other to skip\n",user->user.password);
+    choice=getchar();
+    if(choice=='m'||choice=='M')
+    {
+      printf("new password is: ");
+      scanf("%s",password);
+      strcpy(user->user.password,password);
+      getchar();
+    }
+    printf("Phonenum: %s ,[m/M] to modify ,other to skip\n",user->user.phonenum);
+    choice=getchar();
+    if(choice=='m'||choice=='M')
+    {
+      printf("new phonenumber is: ");
+      scanf("%s",phonenum);
+      strcpy(user->user.phonenum,phonenum);
+      getchar();
+    }
+    printf("Sex: %s ,[m/M] to modify ,other to skip\n",user->user.sex);
+    choice=getchar();
+    if(choice=='m'||choice=='M')
+    {
+      printf("new sex value is: ");
+      scanf("%s",sex);
+      strcpy(user->user.sex,sex);
+      getchar();
+    }
+    printf("Age: %d ,[m/M] to modify ,other to skip\n",user->user.age);
+    choice=getchar();
+    if(choice=='m'||choice=='M')
+    {
+      printf("new age is: ");
+      scanf("%d",&age);
+      user->user.age=age;
+      getchar();
+    }
+    printf("User info modification done\nnew user info is:\n");
+    user_display(user);
+    if(user->user.usertype!=old_usertype)
+    {
+      user_delete_by_name(user->user.username);
+      if(user->user.usertype==ADMIN)
+        user_insert(user,ADMIN);
+      else
+        user_insert(user,NORMAL_USER);
+  }
+    return 0;
+    }
+  }
+
+
 void modify_user()
 {
   char username[MAXUSERNAME];
@@ -800,8 +1021,9 @@ void modify_user()
   int id,option,flag,choice,usertype,age,old_usertype;
   ulink user=NULL;
   flag=1;
+
   while(flag--){
-  printf("Locate user by name[N] or id[I]:");
+  printf("Locate user by name[N] or id[I]: ");
   option=getchar();
   getchar();
   switch(option)
@@ -828,70 +1050,11 @@ void modify_user()
   }
 
 }
+
 if(user==NULL)
   printf("User not found\n");
 else
-{
-  printf("Change info for user %s\n",user->user.username);
-  printf("Usertype: %d ,[m/M] to modify ,other to skip\n",user->user.usertype);
-  choice=getchar();
-  if(choice=='m'||choice=='M')
-  {
-    printf("new usertype is: ");
-    scanf("%d",&usertype);
-    old_usertype=user->user.usertype;
-    user->user.usertype=usertype;
-    getchar();
-  }
-
-  printf("Password: %s ,[m/M] to modify ,other to skip\n",user->user.password);
-  choice=getchar();
-  if(choice=='m'||choice=='M')
-  {
-    printf("new password is: ");
-    scanf("%s",password);
-    strcpy(user->user.password,password);
-    getchar();
-  }
-  printf("Phonenum: %s ,[m/M] to modify ,other to skip\n",user->user.phonenum);
-  choice=getchar();
-  if(choice=='m'||choice=='M')
-  {
-    printf("new phonenumber is: ");
-    scanf("%s",phonenum);
-    strcpy(user->user.phonenum,phonenum);
-    getchar();
-  }
-  printf("Sex: %s ,[m/M] to modify ,other to skip\n",user->user.sex);
-  choice=getchar();
-  if(choice=='m'||choice=='M')
-  {
-    printf("new sex value is: ");
-    scanf("%s",sex);
-    strcpy(user->user.sex,sex);
-    getchar();
-  }
-  printf("Age: %d ,[m/M] to modify ,other to skip\n",user->user.age);
-  choice=getchar();
-  if(choice=='m'||choice=='M')
-  {
-    printf("new age is: ");
-    scanf("%d",&age);
-    user->user.age=age;
-    getchar();
-  }
-  printf("User info modification done\nnew user info is:\n");
-  user_display(user);
-  if(user->user.usertype!=old_usertype)
-  {
-    user_delete_by_name(user->user.username);
-    if(user->user.usertype==ADMIN)
-      user_insert(&adminlist,user);
-    else
-      user_insert(&normallist,user);
-}
-
-  }
+  modify_user_by_ulink(user);
 }
 
 void user_display(ulink user)
@@ -927,7 +1090,20 @@ ulink search_user_by_name(char username[])
     }
     user=user->next;
   }
-  printf("user %s not exist!\n",username);
+  printf("user %s not exist in ADMIN list!\n",username);
+
+  user=normallist;
+  while(user!=NULL)
+  {
+
+    if(strcmp(user->user.username,username)==0)
+    {
+      user_display(user);
+      return user;
+    }
+    user=user->next;
+  }
+  printf("user %s not exist in normal user list!\n",username);
   return NULL;
 }
 
@@ -946,7 +1122,19 @@ ulink search_user_by_id(int id)
     }
   user=user->next;
   }
-  printf("user id %d not exist!\n",id);
+  printf("user id %d not exist in ADMIN list!\n",id);
+  user=normallist;
+  while(user!=NULL)
+  {
+
+    if(user->user.id==id)
+    {
+      user_display(user);
+      return user;
+    }
+  user=user->next;
+  }
+  printf("user id %d not exist in normaluser list!\n",id);
   return NULL;
 }
 
@@ -957,7 +1145,7 @@ int user_delete_by_name(char username[])
   //check if it is the head
   if(adminlist==NULL)
     printf("No user in the admin list\n");
-  if(strcmp(user->user.username,username)==0)
+  else if(strcmp(user->user.username,username)==0)
   {
    temp=user;
    if(user->next==NULL)
@@ -988,7 +1176,7 @@ int user_delete_by_name(char username[])
   //check if it is the head
   if(normallist==NULL)
     printf("No user in the normal user list\n");
-  if(strcmp(user->user.username,username)==0)
+  else if(strcmp(user->user.username,username)==0)
   {
    if(user->next==NULL)
      normallist=NULL;
@@ -1024,7 +1212,7 @@ int user_delete_by_id(int id)
   //check if it is the head
   if(adminlist==NULL)
     printf("No user in the admin list\n");
-  if(user->user.id==id)
+  else if(user->user.id==id)
   {
    temp=user;
    if(user->next==NULL)
@@ -1056,7 +1244,7 @@ int user_delete_by_id(int id)
   //check if it is the head
   if(normallist==NULL)
     printf("No user in the normal list\n");
-  if(user->user.id==id)
+  else if(user->user.id==id)
   {
    if(user->next==NULL)
      normallist=NULL;
@@ -1101,13 +1289,21 @@ void book_insert(blink *booklistptr,blink booklink)
   booklink->book.id=temp->book.id+1;
 }
 
-void user_insert(ulink *userlistptr,ulink userlink)
+void user_insert(ulink userlink,int flag)
 {
    ulink temp,userlist;
-   userlist=*userlistptr;
+   if(flag==ADMIN)
+     userlist=adminlist;
+   else
+     userlist=normallist;
    if(userlist==NULL)
-   { userlist=userlink;
+   {
+     userlist=userlink;
      userlist->user.id=1;
+     if(flag==ADMIN)
+       adminlist=userlist;
+     else
+       normallist=userlist;
      return;
    }
    for(temp=userlist;temp->next!=NULL;temp=temp->next)
@@ -1120,6 +1316,39 @@ void user_insert(ulink *userlistptr,ulink userlink)
 void normaluser_UI(char username[])
 {
   printf("############# Menu for user '%s' #############\n",username);
+  int c,flag=1;
+  ulink user=NULL;
+  borrowlink borrow=NULL;
+  user=search_user_by_name(username);
+  borrow=search_borrow_by_username(username);
+  while(flag){
+  printf("############# Menu for user '%s' #############\n",username);
+  printf("1. User Info\n2. Modify User Info\n3. My Borrow\n4. Search Book\n5. Exit\n");
+  printf("Which service do you like?[ 1 ]\n");
+  c=getchar();
+  getchar();
+  switch(c){
+    case '\n':
+    case '1':
+      user_display(user);
+      break;
+    case '2':
+      modify_user_by_ulink(user);
+      break;
+    case '3':
+      borrow_display(borrow);
+      break;
+    case '4':
+      search_book();
+      break;
+    case '5':
+      flag=0;
+      break;
+    default:
+      printf("Please input an valid option\n");
+      break;
+  }
+  }
 }
 
 loginlink login()
@@ -1161,14 +1390,8 @@ int getusername(char username[],int maxusername)
 
 int authorize(char username[],char password[])
 {
-  static ulink adminptr,normalptr;
+  ulink adminptr,normalptr;
   int usertype=FORBIDDEN;
-  init();
-
-  //normallist=(ulink)malloc(size(Usernode));
-  //normallist->user.username="oscar";
-  //normallist->user.password="oscar050513";
-  //adminlist->next=NULL;
 
   adminptr=searchuserlist(adminlist,username,password);
   if(adminptr)
